@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estados y Capitales de México</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.3/howler.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Pixelify+Sans&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-image: url('https://upload.wikimedia.org/wikipedia/commons/1/11/Mapa_de_M%C3%A9xico_con_divisiones_pol%C3%ADticas.png');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            text-align: center;
+            font-family: 'Press Start 2P', 'VT323', 'Pixelify Sans', sans-serif;
+        }
+        .hidden { display: none; }
+        .clickable { cursor: pointer; text-decoration: underline; }
+    </style>
+</head>
+<body class="flex flex-col items-center p-4">
+    <h1 class="text-3xl font-bold mb-4 bg-white p-2 rounded-lg">Aprende las Capitales de México</h1>
+    <button id="startButton" class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700">Iniciar</button>
+    
+    <div id="gameContainer" class="hidden text-center bg-white p-4 rounded-lg shadow-md">
+        <p id="question" class="text-xl font-semibold mb-3"></p>
+        <input type="text" id="answerInput" class="px-4 py-2 border rounded-lg" placeholder="Escribe la capital" autofocus>
+        <button id="submitAnswer" class="px-4 py-2 bg-green-500 text-white rounded-lg ml-2">Responder</button>
+        <p id="score" class="mt-4 text-lg clickable">Puntuación: 0</p>
+        <p id="correctCount" class="text-green-600">Aciertos: 0</p>
+        <p id="incorrectCount" class="text-red-600">Errores: 0</p>
+        <button id="resetButton" class="mt-4 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-700">Reiniciar</button>
+    </div>
+    
+    <script>
+        const states = [
+            { name: "Aguascalientes", capital: "Aguascalientes" },
+            { name: "Baja California", capital: "Mexicali" },
+            { name: "Baja California Sur", capital: "La Paz" },
+            { name: "Campeche", capital: "Campeche" },
+            { name: "Chiapas", capital: "Tuxtla Gutiérrez" },
+            { name: "Chihuahua", capital: "Chihuahua" },
+            { name: "Coahuila", capital: "Saltillo" },
+            { name: "Colima", capital: "Colima" },
+            { name: "Durango", capital: "Durango" },
+            { name: "Guanajuato", capital: "Guanajuato" },
+            { name: "Guerrero", capital: "Chilpancingo" },
+            { name: "Hidalgo", capital: "Pachuca" },
+            { name: "Jalisco", capital: "Guadalajara" },
+            { name: "Estado de México", capital: "Toluca" },
+            { name: "Michoacán", capital: "Morelia" },
+            { name: "Morelos", capital: "Cuernavaca" },
+            { name: "Nayarit", capital: "Tepic" },
+            { name: "Nuevo León", capital: "Monterrey" },
+            { name: "Oaxaca", capital: "Oaxaca" },
+            { name: "Puebla", capital: "Puebla" },
+            { name: "Querétaro", capital: "Querétaro" },
+            { name: "Quintana Roo", capital: "Chetumal" },
+            { name: "San Luis Potosí", capital: "San Luis Potosí" },
+            { name: "Sinaloa", capital: "Culiacán" },
+            { name: "Sonora", capital: "Hermosillo" },
+            { name: "Tabasco", capital: "Villahermosa" },
+            { name: "Tamaulipas", capital: "Ciudad Victoria" },
+            { name: "Tlaxcala", capital: "Tlaxcala" },
+            { name: "Veracruz", capital: "Xalapa" },
+            { name: "Yucatán", capital: "Mérida" },
+            { name: "Zacatecas", capital: "Zacatecas" }
+        ];
+        
+        let currentIndex = 0;
+        let score = 0;
+        let correctAnswers = 0;
+        let incorrectAnswers = 0;
+        
+        const correctSound = new Howl({ src: ['https://www.fesliyanstudios.com/play-mp3/4384'] });
+        const incorrectSound = new Howl({ src: ['https://www.fesliyanstudios.com/play-mp3/4385'] });
+        
+        const startButton = document.getElementById("startButton");
+        const gameContainer = document.getElementById("gameContainer");
+        const questionText = document.getElementById("question");
+        const scoreText = document.getElementById("score");
+        const correctCountText = document.getElementById("correctCount");
+        const incorrectCountText = document.getElementById("incorrectCount");
+        const answerInput = document.getElementById("answerInput");
+        const submitAnswer = document.getElementById("submitAnswer");
+        const resetButton = document.getElementById("resetButton");
+        
+        startButton.addEventListener("click", startGame);
+        submitAnswer.addEventListener("click", checkAnswer);
+        resetButton.addEventListener("click", startGame);
+        
+        answerInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                checkAnswer();
+            }
+        });
+        
+        function startGame() {
+            startButton.classList.add("hidden");
+            gameContainer.classList.remove("hidden");
+            currentIndex = 0;
+            correctAnswers = 0;
+            incorrectAnswers = 0;
+            score = 0;
+            updateScore();
+            generateQuestion();
+        }
+        
+        function generateQuestion() {
+            if (currentIndex >= states.length) {
+                alert("¡Felicidades! Has respondido todas las preguntas.");
+                startButton.classList.remove("hidden");
+                gameContainer.classList.add("hidden");
+                return;
+            }
+            questionText.textContent = `¿Cuál es la capital de ${states[currentIndex].name}?`;
+            answerInput.value = "";
+            answerInput.focus();
+        }
+        
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim();
+            if (userAnswer.toLowerCase() === states[currentIndex].capital.toLowerCase()) {
+                correctAnswers++;
+                score++;
+                correctSound.play();
+            } else {
+                incorrectAnswers++;
+                incorrectSound.play();
+            }
+            updateScore();
+            currentIndex++;
+            generateQuestion();
+        }
+        
+        function updateScore() {
+            scoreText.textContent = `Puntuación: ${score}`;
+            correctCountText.textContent = `Aciertos: ${correctAnswers}`;
+            incorrectCountText.textContent = `Errores: ${incorrectAnswers}`;
+        }
+    </script>
+</body>
+</html>
